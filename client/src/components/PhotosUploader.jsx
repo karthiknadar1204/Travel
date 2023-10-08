@@ -19,22 +19,18 @@ const PhotosUploader = ({ addedPhotos, onChange }) => {
     e.preventDefault();
     const files = e.target.files;
     const data = new FormData();
-
     for (let i = 0; i < files.length; i++) {
       data.append("photos", files[i]);
     }
-
     try {
-      const { data: filesArray } = await axios.post("/upload", data, {
+      axios.post("/upload", data, {
         headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      // Assuming each file object in the array has a 'fileName' property
-      const fileNames = filesArray.map((file) => file.fileName);
-
-      onChange((prev) => {
-        return [...prev, ...fileNames];
-      });
+      }).then(response=>{
+        const{data:fileNames}=response;
+        onChange((prev) => {
+          return [...prev, ...fileNames];
+        });
+      })
     } catch (error) {
       console.error("Error uploading photos:", error);
     }
@@ -61,7 +57,7 @@ const PhotosUploader = ({ addedPhotos, onChange }) => {
           {addedPhotos.length > 0 &&
             addedPhotos.map((link, index) => (
               <div key={index}>
-                <img src={"http://localhost:3002/uploads" + link} />
+                <img src={"http://localhost:3002" + link} />
                 <button className="cursor-pointer absolute bottom-1 right-1 text-white bg-black bg-opacity-50 rounded-2xl p-2" >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -105,9 +101,11 @@ const PhotosUploader = ({ addedPhotos, onChange }) => {
           </svg>
           Upload
         </label>
+        
       </div>
     </div>
   );
 };
 
 export default PhotosUploader;
+ 

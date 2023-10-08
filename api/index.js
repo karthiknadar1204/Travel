@@ -19,13 +19,11 @@ app.use(cors({
     origin:'http://127.0.0.1:5173'
 }));
 app.use(express.json());
-app.use('/uploads',express.static(__dirname+'/uploads'))
+// app.use('/uploads', express.static(__dirname + '/uploads'));
+app.use("/uploads", express.static("uploads"));
 app.use(cookieParser());
 
 const secret='fepviuewvhpiuwvhn8er98yre8';
-// app.get('/register',(req,res)=>{
-//     res.json('test ok');
-// })
 
 (async () => {
   try {
@@ -123,13 +121,35 @@ app.post('/register', async (req, res) => {
     res.cookie('token','').json(true);
   })
 
+  // app.post('/upload-by-link', async (req, res) => {
+  //   const { link } = req.body;
+  //   const timestamp = Date.now(); // Get the current timestamp
+  //   const newName = timestamp + '.png'; // Create a unique image file name with the '.jpg' extension
+  //   const uploadDir = __dirname + '/uploads/';
+  
+  //   if (!fs.existsSync(uploadDir)) {
+  //     fs.mkdirSync(uploadDir);
+  //   }
+  
+  //   try {
+  //     await imageDownloader.image({
+  //       url: link,
+  //       dest: uploadDir + newName,
+  //     });
+  
+  //     res.json(__dirname + '/uploads/' + newName);
+  //   } catch (error) {
+  //     console.error('Image download error:', error);
+  //     res.status(500).json({ error: 'Image download failed' });
+  //   }
+  // });
+
   app.post('/upload-by-link', async (req, res) => {
     const { link } = req.body;
     const timestamp = Date.now(); // Get the current timestamp
-    const newName = timestamp + '.jpg'; // Create a unique image file name with the '.jpg' extension
+    const newName = timestamp + '.png'; // Create a unique image file name with the '.png' extension
     const uploadDir = __dirname + '/uploads/';
   
-    // Create the 'uploads' directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
@@ -137,15 +157,17 @@ app.post('/register', async (req, res) => {
     try {
       await imageDownloader.image({
         url: link,
-        dest: uploadDir + newName, // Set the full path including the unique file name
+        dest: uploadDir + newName,
       });
   
-      res.json(__dirname + '/uploads/' + newName);
+      // Send the correct relative path to the client
+      res.json('/uploads/' + newName);
     } catch (error) {
       console.error('Image download error:', error);
       res.status(500).json({ error: 'Image download failed' });
     }
   });
+  
 
   const photosMiddleware = multer({ dest: 'uploads' });
   app.post('/upload', photosMiddleware.array('photos', 100), (req, res) => {
@@ -161,42 +183,6 @@ app.post('/register', async (req, res) => {
     }
     res.json(uploadedFiles);
   });
-
-  // app.post('/places', async (req, res) => {
-  //   const { token } = req.cookies;
-  //   const {
-  //     title,
-  //     address,
-  //     addedPhotos,
-  //     description,
-  //     perks,
-  //     extraInfo,
-  //     checkIn,
-  //     checkOut,
-  //     maxGuests,
-  //   } = req.body;
-  
-  //   try {
-  //     const verified = jwt.verify(token, secret, {});
-  //     const placeDoc = await Place.create({
-  //       owner: verified.id,
-  //       title,
-  //       address,
-  //       addedPhotos,
-  //       description,
-  //       perks,
-  //       extraInfo,
-  //       checkIn,
-  //       checkOut,
-  //       maxGuests,
-  //     });
-  
-  //     res.json(placeDoc); // Send the created place document as the response
-  //   } catch (error) {
-  //     console.error('Error creating place:', error);
-  //     res.status(500).json({ error: 'Place creation failed' });
-  //   }
-  // });
 
   app.post('/places', async (req, res) => {
     const { token } = req.cookies;
@@ -241,7 +227,6 @@ app.post('/register', async (req, res) => {
     }
   });
 
-
   app.get('/user-places',(req,res)=>{
     const { token } = req.cookies;
     const verified = jwt.verify(token, secret, {},async(err,userData)=>{
@@ -270,7 +255,6 @@ app.post('/register', async (req, res) => {
       maxGuests,
       price
     } = req.body;
-    
     
     const verified = jwt.verify(token, secret, {},async(err,userData)=>{
       if(err){
@@ -326,16 +310,11 @@ app.post('/register', async (req, res) => {
     }
 });
 
-
 app.get('/bookings',async(req,res)=>{
   const userData=await getUserDataFromToken(req);
   res.json(await Booking.find({user:userData.id}).populate('place'))
 
 })
-
-
-
-  
 
 port=3002;
 
